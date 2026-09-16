@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { loginWithGoogleAccount } from '../utils/authService';
 import type { User } from '../types';
-import { Plus, Check } from 'lucide-react';
+import { Plus, Check, User as UserIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
-
 import { REAL_PHOTO_ASSETS } from '../utils/photoAssets';
+
+interface SavedGoogleAccount {
+  name: string;
+  email: string;
+  avatar?: string;
+}
 
 interface GoogleOAuthModalProps {
   isOpen: boolean;
@@ -22,35 +27,44 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
 }) => {
   const [customName, setCustomName] = useState('');
   const [customEmail, setCustomEmail] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [savedAccounts, setSavedAccounts] = useState<SavedGoogleAccount[]>([]);
+  const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const googleAccounts = [
-    {
-      name: 'Deepak Patel',
-      email: 'deepak.patel@gmail.com',
-      avatar: REAL_PHOTO_ASSETS.avatar_deepak,
-      role: 'Signed in on this device'
-    },
-    {
-      name: 'Alex Johnson',
-      email: 'alex.johnson@gmail.com',
-      avatar: REAL_PHOTO_ASSETS.avatar_alex,
-      role: 'Signed in on this device'
-    },
-    {
-      name: 'Sarah Jenkins',
-      email: 'sarah.jenkins@gmail.com',
-      avatar: REAL_PHOTO_ASSETS.avatar_sarah,
-      role: 'Signed in on this device'
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('ecosort_recent_google_accounts');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSavedAccounts(parsed);
+          setShowForm(false);
+          return;
+        }
+      }
+    } catch (e) {
+      // Ignore
     }
-  ];
+    setShowForm(true);
+  }, [isOpen]);
+
+  const saveToRecent = (name: string, email: string, avatar?: string) => {
+    try {
+      const existing = savedAccounts.filter((a) => a.email.toLowerCase() !== email.toLowerCase());
+      const updated = [{ name, email, avatar }, ...existing].slice(0, 3);
+      setSavedAccounts(updated);
+      localStorage.setItem('ecosort_recent_google_accounts', JSON.stringify(updated));
+    } catch (e) {
+      // Ignore
+    }
+  };
 
   const handleSelectAccount = async (name: string, email: string, avatar?: string) => {
     setIsSubmitting(true);
     try {
       const res = await loginWithGoogleAccount(name, email, avatar);
       setIsSubmitting(false);
+      saveToRecent(name, email, avatar);
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
       addToast('success', 'Google Sign In Successful ✓', res.message);
       onSuccess(res.user);
@@ -61,11 +75,11 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
     }
   };
 
-  const handleCustomSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customEmail.trim()) return;
     const derivedName = customName.trim() || customEmail.split('@')[0].replace('.', ' ');
-    handleSelectAccount(derivedName, customEmail.trim());
+    handleSelectAccount(derivedName, customEmail.trim(), REAL_PHOTO_ASSETS.avatar_deepak);
   };
 
   return (
@@ -99,8 +113,10 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
             </svg>
           </div>
           <div>
-            <h3 className="font-extrabold text-lg text-slate-900">Choose an account</h3>
-            <p className="text-xs text-slate-500 font-medium">to continue to <span className="font-bold text-[#15803D]">EcoSort AI</span></p>
+            <h3 className="font-extrabold text-lg text-slate-900">Sign in with Google</h3>
+            <p className="text-xs text-slate-500 font-medium">
+              to continue to <span className="font-bold text-[#15803D]">EcoSort AI</span>
+            </p>
           </div>
         </div>
 
@@ -108,29 +124,27 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
         {isSubmitting && (
           <div className="py-8 text-center space-y-3 animate-fadeIn">
             <div className="w-10 h-10 border-4 border-emerald-200 border-t-[#15803D] rounded-full animate-spin mx-auto" />
-            <p className="font-bold text-xs text-slate-800">Signing in with Google...</p>
-            <p className="text-[11px] text-slate-500">Connecting your Google Account securely</p>
+            <p className="font-bold text-xs text-slate-800">Authenticating Google Account...</p>
+            <p className="text-[11px] text-slate-500">Connecting securely to Supabase Cloud</p>
           </div>
         )}
 
-        {/* Saved Device Google Accounts */}
-        {!isSubmitting && !showCustomInput && (
+        {/* Previously Signed In Google Accounts (Only if user signed in before on this device) */}
+        {!isSubmitting && !showForm && savedAccounts.length > 0 && (
           <div className="space-y-2">
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-              Google Accounts on this Device:
+              Signed in on this device:
             </p>
-            {googleAccounts.map((acc) => (
+            {savedAccounts.map((acc) => (
               <div
                 key={acc.email}
                 onClick={() => handleSelectAccount(acc.name, acc.email, acc.avatar)}
                 className="p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-500 bg-white hover:bg-emerald-50/60 cursor-pointer transition-all flex items-center justify-between group shadow-2xs"
               >
                 <div className="flex items-center gap-3">
-                  <img
-                    src={acc.avatar}
-                    alt={acc.name}
-                    className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
-                  />
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center border border-emerald-200 shrink-0 text-sm">
+                    {acc.name.charAt(0).toUpperCase()}
+                  </div>
                   <div>
                     <h4 className="font-bold text-sm text-slate-900 group-hover:text-[#15803D]">
                       {acc.name}
@@ -138,18 +152,13 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
                     <p className="text-xs text-slate-500">{acc.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-medium text-slate-400 hidden sm:inline">
-                    {acc.role}
-                  </span>
-                  <Check className="w-4 h-4 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
+                <Check className="w-4 h-4 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             ))}
 
             <button
               type="button"
-              onClick={() => setShowCustomInput(true)}
+              onClick={() => setShowForm(true)}
               className="w-full p-3 rounded-2xl border border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-2 mt-2"
             >
               <Plus className="w-4 h-4 text-[#15803D]" />
@@ -158,16 +167,16 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
           </div>
         )}
 
-        {/* Custom Google Email Input */}
-        {!isSubmitting && showCustomInput && (
-          <form onSubmit={handleCustomSubmit} className="space-y-3">
+        {/* Google Email Sign In Form */}
+        {!isSubmitting && showForm && (
+          <form onSubmit={handleFormSubmit} className="space-y-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Your Google Email Address
+                Enter your Google Email
               </label>
               <input
                 type="email"
-                placeholder="your.name@gmail.com"
+                placeholder="your.email@gmail.com"
                 value={customEmail}
                 onChange={(e) => setCustomEmail(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-[#15803D]/40 outline-none"
@@ -177,11 +186,11 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Display Name (Optional)
+                Your Name (Optional)
               </label>
               <input
                 type="text"
-                placeholder="e.g. Deepak Patel"
+                placeholder="First and Last Name"
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-[#15803D]/40 outline-none"
@@ -189,19 +198,21 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowCustomInput(false)}
-                className="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
-              >
-                Back
-              </button>
+              {savedAccounts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                >
+                  Back to saved accounts
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2.5 bg-[#15803D] hover:bg-[#15803D]/90 text-white font-bold text-xs rounded-xl shadow"
+                className="px-4 py-2.5 bg-[#15803D] hover:bg-[#15803D]/90 text-white font-bold text-xs rounded-xl shadow transition-all active:scale-98"
               >
-                Sign In with Google Account
+                Continue with Google
               </button>
             </div>
           </form>
@@ -209,7 +220,7 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
 
         {/* Google OAuth Legal Notice */}
         <p className="text-[11px] text-slate-400 text-center leading-relaxed pt-2 border-t border-slate-100">
-          To continue, Google will share your name, email address, language preference, and profile picture with EcoSort AI.
+          Google will share your name, email address, language preference, and profile picture with EcoSort AI.
         </p>
       </div>
     </Modal>
