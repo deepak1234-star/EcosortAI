@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, useOutletContext, NavLink } from 'react-router-dom';
-import { loginUser, registerUser } from '../utils/authService';
+import { loginUser, registerUser, triggerGoogleOAuth } from '../utils/authService';
 import type { RoleType, User } from '../types';
 import { GoogleOAuthModal } from '../components/GoogleOAuthModal';
 import {
@@ -117,6 +117,15 @@ export const Login: React.FC = () => {
   const handleGoogleSuccess = () => {
     refreshState();
     navigate('/dashboard');
+  };
+
+  const handleGoogleAuthClick = async () => {
+    setIsLoading(true);
+    const res = await triggerGoogleOAuth();
+    setIsLoading(false);
+    if (!res.success) {
+      setIsGoogleModalOpen(true);
+    }
   };
 
   return (
@@ -287,7 +296,7 @@ export const Login: React.FC = () => {
         <div className="pt-2 space-y-3 border-t border-slate-100">
           <button
             type="button"
-            onClick={() => setIsGoogleModalOpen(true)}
+            onClick={handleGoogleAuthClick}
             className="w-full py-2 px-4 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs sm:text-sm rounded-xl border border-slate-300 shadow-2xs transition-colors flex items-center justify-center gap-2.5"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">

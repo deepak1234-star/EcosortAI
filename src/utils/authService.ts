@@ -3,6 +3,7 @@ import {
   registerUserSupabase,
   loginUserSupabase,
   loginWithGoogleSupabase,
+  signInWithGoogleOAuth,
   updateProfileSupabase,
   signOutSupabase
 } from './supabaseService';
@@ -86,6 +87,10 @@ export const loginWithGoogleAccount = async (
     localStorage.setItem('ecosort_current_session', JSON.stringify(res.user));
   }
   return res;
+};
+
+export const triggerGoogleOAuth = async (): Promise<{ success: boolean; message?: string }> => {
+  return await signInWithGoogleOAuth();
 };
 
 /**

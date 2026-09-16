@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
-import { loginUser, registerUser } from '../utils/authService';
+import { loginUser, registerUser, triggerGoogleOAuth } from '../utils/authService';
 import type { RoleType } from '../types';
 import {
   LogIn,
@@ -127,6 +127,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     onClose();
   };
 
+  const handleGoogleAuthClick = async () => {
+    setIsLoading(true);
+    const res = await triggerGoogleOAuth();
+    setIsLoading(false);
+    if (!res.success) {
+      setIsGoogleModalOpen(true);
+    }
+  };
+
   const handleQuickPersona = async (demoEmail: string, demoPass: string) => {
     setEmail(demoEmail);
     setPassword(demoPass);
@@ -238,7 +247,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="space-y-2">
           <button
             type="button"
-            onClick={() => setIsGoogleModalOpen(true)}
+            onClick={handleGoogleAuthClick}
             disabled={isLoading}
             className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm rounded-2xl border border-slate-200 shadow-2xs transition-all flex items-center justify-center gap-2.5 disabled:opacity-50"
           >

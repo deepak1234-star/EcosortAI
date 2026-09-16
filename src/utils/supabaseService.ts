@@ -403,3 +403,31 @@ export async function signOutSupabase(): Promise<void> {
     // Ignore signout warnings
   }
 }
+
+/**
+ * Initiate Real Google OAuth Redirection via Supabase Auth directly to accounts.google.com
+ */
+export async function signInWithGoogleOAuth(): Promise<{ success: boolean; message?: string }> {
+  try {
+    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : 'https://ecosort-ai.vercel.app/dashboard';
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account'
+        }
+      }
+    });
+
+    if (error) {
+      return { success: false, message: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Failed to initiate Google OAuth redirect.' };
+  }
+}
