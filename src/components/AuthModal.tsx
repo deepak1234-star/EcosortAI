@@ -282,7 +282,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                 <input
                   type="text"
-                  placeholder="e.g. Alex Johnson"
+                  placeholder="First and last name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-[#15803D]/30 focus:border-[#15803D] outline-none transition-all shadow-inner"
@@ -300,7 +300,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
                 type="email"
-                placeholder="alex.johnson@ecosort.org"
+                placeholder="name@ecosort.org"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-[#15803D]/30 focus:border-[#15803D] outline-none transition-all shadow-inner"
@@ -429,42 +429,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             )}
           </button>
         </form>
-
-        {/* Quick Demo Switcher */}
-        <div className="pt-3 border-t border-slate-100 space-y-2">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-            Instant Demo Account Sign In:
-          </span>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickPersona('alex.johnson@ecosort.org', 'password123')}
-              className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-[#15803D] border border-slate-200 hover:border-emerald-300 text-xs font-semibold transition-all text-left flex items-center gap-2"
-            >
-              <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0">
-                AJ
-              </div>
-              <div className="min-w-0">
-                <span className="block font-bold text-xs truncate">Alex Johnson</span>
-                <span className="text-[10px] text-slate-400">Community Member</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickPersona('admin@ecosort.org', 'admin123')}
-              className="flex-1 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-[#15803D] border border-slate-200 hover:border-emerald-300 text-xs font-semibold transition-all text-left flex items-center gap-2"
-            >
-              <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center font-bold text-xs shrink-0">
-                SJ
-              </div>
-              <div className="min-w-0">
-                <span className="block font-bold text-xs truncate">Sarah Jenkins</span>
-                <span className="text-[10px] text-slate-400">Community Leader (Admin)</span>
-              </div>
-            </button>
-          </div>
-        </div>
       </div>
 
       <GoogleOAuthModal

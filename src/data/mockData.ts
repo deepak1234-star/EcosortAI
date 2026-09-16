@@ -10,14 +10,14 @@ import type {
 import { REAL_PHOTO_ASSETS } from '../utils/photoAssets';
 
 export const INITIAL_USER: User = {
-  id: 'usr_001',
-  name: 'Alex Johnson',
-  email: 'alex.johnson@ecosort.org',
+  id: 'usr_guest',
+  name: 'Community Member',
+  email: 'member@ecosort.org',
   role: 'Community Member',
-  ecoPoints: 850,
-  activitiesCompleted: 6,
-  scansCompleted: 12,
-  avatar: REAL_PHOTO_ASSETS.avatar_alex
+  ecoPoints: 100,
+  activitiesCompleted: 0,
+  scansCompleted: 0,
+  avatar: REAL_PHOTO_ASSETS.avatar_deepak
 };
 
 export const DEMO_CLASSIFICATIONS: DemoClassification[] = [
@@ -230,7 +230,7 @@ export const INITIAL_SUBMISSIONS: CommunitySubmission[] = [
     status: 'Approved',
     rewardPoints: 50,
     submittedAt: '2026-09-10T14:30:00Z',
-    participantName: 'Alex Johnson'
+    participantName: 'Community Member'
   },
   {
     id: 'sub_002',
@@ -244,7 +244,7 @@ export const INITIAL_SUBMISSIONS: CommunitySubmission[] = [
     status: 'Approved',
     rewardPoints: 100,
     submittedAt: '2026-09-08T10:15:00Z',
-    participantName: 'Alex Johnson'
+    participantName: 'Community Member'
   },
   {
     id: 'sub_003',
@@ -258,7 +258,7 @@ export const INITIAL_SUBMISSIONS: CommunitySubmission[] = [
     status: 'Approved',
     rewardPoints: 50,
     submittedAt: '2026-09-05T16:00:00Z',
-    participantName: 'Alex Johnson'
+    participantName: 'Community Member'
   }
 ];
 
