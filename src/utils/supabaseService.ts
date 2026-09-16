@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { User, WasteScan, CommunitySubmission, RewardRedemption } from '../types';
+import type { User, WasteScan, CommunitySubmission, RewardRedemption, RoleType } from '../types';
 import { REAL_PHOTO_ASSETS } from './photoAssets';
 
 /**
@@ -10,11 +10,11 @@ export async function registerUserSupabase(
   password?: string,
   name?: string,
   role?: string
-): { success: boolean; message: string; user?: User } {
+): Promise<{ success: boolean; message: string; user?: User }> {
   try {
     const emailClean = email.trim().toLowerCase();
     const displayName = name?.trim() || emailClean.split('@')[0];
-    const userRole = role || 'Community Member';
+    const userRole: RoleType = (role as RoleType) || 'Community Member';
     const pwdToUse = password || 'password123';
 
     // 1. Sign up with Supabase Auth
@@ -116,7 +116,7 @@ export async function loginUserSupabase(
         id: profile.id || userId,
         name: profile.name || emailClean.split('@')[0],
         email: profile.email || emailClean,
-        role: profile.role || 'Community Member',
+        role: (profile.role as RoleType) || 'Community Member',
         ecoPoints: profile.eco_points ?? 100,
         activitiesCompleted: profile.activities_completed ?? 0,
         scansCompleted: profile.scans_completed ?? 0,

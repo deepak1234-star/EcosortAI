@@ -61,7 +61,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const strength = getPasswordStrength(password);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -72,26 +72,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-
+    try {
       if (mode === 'register') {
         if (!name.trim()) {
+          setIsLoading(false);
           setError('Please enter your full name.');
           return;
         }
         if (password.length < 6) {
+          setIsLoading(false);
           setError('Password must be at least 6 characters long.');
           return;
         }
 
-        const res = registerUser({
+        const res = await registerUser({
           name: name.trim(),
           email: email.trim(),
           password: password.trim(),
           role
         });
 
+        setIsLoading(false);
         if (res.success) {
           confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
           addToast('success', 'Account Created ✓', res.message);
@@ -101,11 +102,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setError(res.message);
         }
       } else {
-        const res = loginUser({
+        const res = await loginUser({
           email: email.trim(),
           password: password.trim()
         });
 
+        setIsLoading(false);
         if (res.success) {
           addToast('success', 'Welcome Back ✓', res.message);
           onSuccess();
@@ -114,7 +116,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setError(res.message);
         }
       }
-    }, 600);
+    } catch (err: any) {
+      setIsLoading(false);
+      setError(err?.message || 'Authentication failed');
+    }
   };
 
   const handleGoogleSuccess = () => {
@@ -122,14 +127,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     onClose();
   };
 
-  const handleQuickPersona = (demoEmail: string, demoPass: string) => {
+  const handleQuickPersona = async (demoEmail: string, demoPass: string) => {
     setEmail(demoEmail);
     setPassword(demoPass);
-    const res = loginUser({ email: demoEmail, password: demoPass });
-    if (res.success) {
-      addToast('success', 'Logged In ✓', res.message);
-      onSuccess();
-      onClose();
+    try {
+      const res = await loginUser({ email: demoEmail, password: demoPass });
+      if (res.success) {
+        addToast('success', 'Logged In ✓', res.message);
+        onSuccess();
+        onClose();
+      }
+    } catch (e) {
+      // Ignore persona error
     }
   };
 
