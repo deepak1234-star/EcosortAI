@@ -134,6 +134,10 @@ export async function loginUserSupabase(
  */
 export async function signInWithGoogleOAuth(): Promise<{ success: boolean; message?: string }> {
   try {
+    if (!isSupabaseConfigured) {
+      return { success: false, message: 'USE_GOOGLE_MODAL' };
+    }
+
     const redirectUrl = typeof window !== 'undefined'
       ? `${window.location.origin}/dashboard`
       : 'https://ecosortai-three.vercel.app/dashboard';
@@ -152,7 +156,7 @@ export async function signInWithGoogleOAuth(): Promise<{ success: boolean; messa
     if (error) {
       return {
         success: false,
-        message: `Google OAuth is not configured in your Supabase project: ${error.message}. Please enable Google Provider in Supabase Dashboard -> Authentication -> Providers.`
+        message: error.message
       };
     }
 
@@ -160,7 +164,7 @@ export async function signInWithGoogleOAuth(): Promise<{ success: boolean; messa
   } catch (err: any) {
     return {
       success: false,
-      message: err?.message || 'Google OAuth is not enabled in your Supabase project configuration.'
+      message: err?.message || 'USE_GOOGLE_MODAL'
     };
   }
 }
