@@ -58,7 +58,7 @@ export interface CommunitySubmission {
   afterImage: string;
   status: 'Pending Verification' | 'Approved' | 'Rejected';
   rewardPoints: number;
-  submittedAt: string;
+  submittedAt?: string;
   participantName: string;
 }
 

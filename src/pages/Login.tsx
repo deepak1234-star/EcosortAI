@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, useOutletContext, NavLink } from 'react-router-dom';
-import { useSignIn, useSignUp } from '@clerk/clerk-react';
 import { loginUser, registerUser, triggerGoogleOAuth } from '../utils/authService';
 import type { RoleType, User } from '../types';
 import { GoogleOAuthModal } from '../components/GoogleOAuthModal';
@@ -22,9 +21,6 @@ export const Login: React.FC = () => {
   const { refreshState, addToast } = useOutletContext<ContextType>();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const { signIn } = useSignIn();
-  const { signUp } = useSignUp();
 
   const isRegisterRoute = location.pathname === '/register';
   const mode = isRegisterRoute ? 'register' : 'login';
@@ -125,27 +121,6 @@ export const Login: React.FC = () => {
 
   const handleGoogleAuthClick = async () => {
     setIsLoading(true);
-    try {
-      if (signIn) {
-        await signIn.authenticateWithRedirect({
-          strategy: 'oauth_google',
-          redirectUrl: '/dashboard',
-          redirectUrlComplete: '/dashboard'
-        });
-        return;
-      }
-      if (signUp) {
-        await signUp.authenticateWithRedirect({
-          strategy: 'oauth_google',
-          redirectUrl: '/dashboard',
-          redirectUrlComplete: '/dashboard'
-        });
-        return;
-      }
-    } catch (err) {
-      console.warn('Clerk OAuth warning, falling back to Supabase:', err);
-    }
-
     const res = await triggerGoogleOAuth();
     setIsLoading(false);
     if (!res.success) {

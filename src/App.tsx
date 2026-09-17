@@ -11,8 +11,6 @@ import { Login } from './pages/Login';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { subscribeAuthState } from './utils/authService';
-import { useUser } from '@clerk/clerk-react';
-import { REAL_PHOTO_ASSETS } from './utils/photoAssets';
 import type { User } from './types';
 
 // Protected Route: Requires authenticated Supabase session
@@ -71,36 +69,19 @@ const RootRedirect: React.FC<{ user: User | null; loading: boolean }> = ({ user,
 };
 
 export const App: React.FC = () => {
-  const { user: clerkUser, isLoaded: isClerkLoaded, isSignedIn: isClerkSignedIn } = useUser();
-  const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
-  const [supabaseLoading, setSupabaseLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = subscribeAuthState((sessionUser, isChecking) => {
-      setSupabaseUser(sessionUser);
-      setSupabaseLoading(isChecking);
+      setUser(sessionUser);
+      setLoading(isChecking);
     });
 
     return () => {
       unsubscribe();
     };
   }, []);
-
-  // Combine Clerk Auth & Supabase Auth
-  const user: User | null = isClerkSignedIn && clerkUser
-    ? {
-        id: clerkUser.id,
-        name: clerkUser.fullName || clerkUser.firstName || clerkUser.primaryEmailAddress?.emailAddress.split('@')[0] || 'Community Member',
-        email: clerkUser.primaryEmailAddress?.emailAddress || '',
-        role: 'Community Member',
-        ecoPoints: 100,
-        activitiesCompleted: 0,
-        scansCompleted: 0,
-        avatar: clerkUser.imageUrl || REAL_PHOTO_ASSETS.avatar_deepak
-      }
-    : supabaseUser;
-
-  const loading = !isClerkLoaded || (supabaseLoading && !isClerkSignedIn);
 
   return (
     <BrowserRouter>
