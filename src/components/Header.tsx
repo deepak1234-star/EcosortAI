@@ -23,8 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const loggedInUser = getCurrentSessionUser();
-  const isLoggedIn = !!loggedInUser;
+  const isLoggedIn = !!(user && user.id && user.id !== 'usr_guest');
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -36,8 +35,8 @@ export const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    logoutSession();
+  const handleLogout = async () => {
+    await logoutSession();
     setIsDropdownOpen(false);
     onUserChanged();
     navigate('/login');

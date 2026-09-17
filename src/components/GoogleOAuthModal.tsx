@@ -1,96 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Modal } from './Modal';
-import { loginWithGoogleAccount } from '../utils/authService';
-import type { User } from '../types';
-import { Plus, Check, User as UserIcon } from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { REAL_PHOTO_ASSETS } from '../utils/photoAssets';
-
-interface SavedGoogleAccount {
-  name: string;
-  email: string;
-  avatar?: string;
-}
+import { triggerGoogleOAuth } from '../utils/authService';
+import { ShieldAlert, ExternalLink } from 'lucide-react';
 
 interface GoogleOAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (user: User) => void;
+  onSuccess: () => void;
   addToast: (type: 'success' | 'error' | 'info' | 'warning', title: string, message?: string) => void;
 }
 
 export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
   isOpen,
-  onClose,
-  onSuccess,
-  addToast
+  onClose
 }) => {
-  const [customName, setCustomName] = useState('');
-  const [customEmail, setCustomEmail] = useState('');
-  const [savedAccounts, setSavedAccounts] = useState<SavedGoogleAccount[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('ecosort_recent_google_accounts');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setSavedAccounts(parsed);
-          setShowForm(false);
-          return;
-        }
-      }
-    } catch (e) {
-      // Ignore
-    }
-    setShowForm(true);
-  }, [isOpen]);
-
-  const saveToRecent = (name: string, email: string, avatar?: string) => {
-    try {
-      const existing = savedAccounts.filter((a) => a.email.toLowerCase() !== email.toLowerCase());
-      const updated = [{ name, email, avatar }, ...existing].slice(0, 3);
-      setSavedAccounts(updated);
-      localStorage.setItem('ecosort_recent_google_accounts', JSON.stringify(updated));
-    } catch (e) {
-      // Ignore
-    }
-  };
-
-  const handleSelectAccount = async (name: string, email: string, avatar?: string) => {
+  const handleRetryGoogleOAuth = async () => {
     setIsSubmitting(true);
+    setErrorMessage(null);
     try {
-      const res = await loginWithGoogleAccount(name, email, avatar);
+      const res = await triggerGoogleOAuth();
       setIsSubmitting(false);
-      saveToRecent(name, email, avatar);
-      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-      addToast('success', 'Google Sign In Successful ✓', res.message);
-      onSuccess(res.user);
-      onClose();
+      if (!res.success) {
+        setErrorMessage(
+          res.message ||
+            'Google OAuth provider is not enabled in your Supabase project settings. Please configure Google provider in Supabase Dashboard.'
+        );
+      }
     } catch (err: any) {
       setIsSubmitting(false);
-      addToast('error', 'Google Sign In Failed', err?.message || 'Unable to sign in with Google account.');
+      setErrorMessage(err?.message || 'Failed to initiate Google OAuth redirection.');
     }
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customEmail.trim()) return;
-    const derivedName = customName.trim() || customEmail.split('@')[0].replace('.', ' ');
-    handleSelectAccount(derivedName, customEmail.trim(), REAL_PHOTO_ASSETS.avatar_deepak);
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title=""
-      maxWidth="sm"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="" maxWidth="sm">
       <div className="space-y-4 pt-0">
-        {/* Authentic Google Header */}
+        {/* Google Header */}
         <div className="text-center space-y-2 pb-3 border-b border-slate-100">
           <div className="w-12 h-12 rounded-full bg-white border border-slate-200 shadow-xs flex items-center justify-center mx-auto">
             <svg className="w-7 h-7" viewBox="0 0 24 24">
@@ -115,113 +63,59 @@ export const GoogleOAuthModal: React.FC<GoogleOAuthModalProps> = ({
           <div>
             <h3 className="font-extrabold text-lg text-slate-900">Sign in with Google</h3>
             <p className="text-xs text-slate-500 font-medium">
-              to continue to <span className="font-bold text-[#15803D]">EcoSort AI</span>
+              Redirecting to Google OAuth authentication
             </p>
           </div>
         </div>
 
-        {/* Loading Overlay */}
-        {isSubmitting && (
-          <div className="py-8 text-center space-y-3 animate-fadeIn">
-            <div className="w-10 h-10 border-4 border-emerald-200 border-t-[#15803D] rounded-full animate-spin mx-auto" />
-            <p className="font-bold text-xs text-slate-800">Authenticating Google Account...</p>
-            <p className="text-[11px] text-slate-500">Connecting securely to Supabase Cloud</p>
-          </div>
-        )}
-
-        {/* Previously Signed In Google Accounts (Only if user signed in before on this device) */}
-        {!isSubmitting && !showForm && savedAccounts.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-              Signed in on this device:
-            </p>
-            {savedAccounts.map((acc) => (
-              <div
-                key={acc.email}
-                onClick={() => handleSelectAccount(acc.name, acc.email, acc.avatar)}
-                className="p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-500 bg-white hover:bg-emerald-50/60 cursor-pointer transition-all flex items-center justify-between group shadow-2xs"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center border border-emerald-200 shrink-0 text-sm">
-                    {acc.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900 group-hover:text-[#15803D]">
-                      {acc.name}
-                    </h4>
-                    <p className="text-xs text-slate-500">{acc.email}</p>
-                  </div>
-                </div>
-                <Check className="w-4 h-4 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* Status / Error Message */}
+        <div className="space-y-3 py-2">
+          {errorMessage ? (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-xs text-amber-800">
+                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Google OAuth Configuration Required</span>
               </div>
-            ))}
+              <p className="text-xs leading-relaxed text-amber-800 font-medium">
+                {errorMessage}
+              </p>
+              <div className="pt-2 text-[11px] text-amber-700 leading-snug border-t border-amber-200/60">
+                To enable Google sign-in for your project:
+                <br />
+                1. Open <span className="font-bold">Supabase Dashboard → Authentication → Providers</span>.
+                <br />
+                2. Enable <span className="font-bold">Google Provider</span> and paste your Google OAuth Client ID & Secret.
+              </div>
+            </div>
+          ) : (
+            <div className="py-6 text-center space-y-3">
+              <div className="w-10 h-10 border-4 border-emerald-200 border-t-[#15803D] rounded-full animate-spin mx-auto" />
+              <p className="font-bold text-xs text-slate-800">Connecting to Google OAuth...</p>
+              <p className="text-[11px] text-slate-500">Redirecting to accounts.google.com</p>
+            </div>
+          )}
+        </div>
 
+        {/* Footer Actions */}
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+          >
+            Close
+          </button>
+          {errorMessage && (
             <button
               type="button"
-              onClick={() => setShowForm(true)}
-              className="w-full p-3 rounded-2xl border border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-2 mt-2"
+              onClick={handleRetryGoogleOAuth}
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-[#15803D] hover:bg-[#15803D]/90 text-white font-bold text-xs rounded-xl shadow"
             >
-              <Plus className="w-4 h-4 text-[#15803D]" />
-              Use another Google Account / Email
+              Retry Google OAuth Redirect
             </button>
-          </div>
-        )}
-
-        {/* Google Email Sign In Form */}
-        {!isSubmitting && showForm && (
-          <form onSubmit={handleFormSubmit} className="space-y-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Enter your Google Email
-              </label>
-              <input
-                type="email"
-                placeholder="your.email@gmail.com"
-                value={customEmail}
-                onChange={(e) => setCustomEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-[#15803D]/40 outline-none"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Your Name (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="First and Last Name"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-[#15803D]/40 outline-none"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              {savedAccounts.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
-                >
-                  Back to saved accounts
-                </button>
-              )}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-4 py-2.5 bg-[#15803D] hover:bg-[#15803D]/90 text-white font-bold text-xs rounded-xl shadow transition-all active:scale-98"
-              >
-                Continue with Google
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Google OAuth Legal Notice */}
-        <p className="text-[11px] text-slate-400 text-center leading-relaxed pt-2 border-t border-slate-100">
-          Google will share your name, email address, language preference, and profile picture with EcoSort AI.
-        </p>
+          )}
+        </div>
       </div>
     </Modal>
   );

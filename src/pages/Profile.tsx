@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { saveUser, resetStorage, getSubmissions, getRedemptions } from '../utils/storage';
 import { logoutSession } from '../utils/authService';
-import type { User, CommunitySubmission, RewardRedemption } from '../types';
+import type { User, CommunitySubmission, RewardRedemption, PointsLedgerItem } from '../types';
+import { fetchPointsLedger } from '../utils/supabaseService';
 import { StatusBadge } from '../components/StatusBadge';
 import {
   Leaf,
@@ -15,7 +16,10 @@ import {
   Mail,
   ShieldCheck,
   LogOut,
-  LogIn
+  LogIn,
+  History,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react';
 
 interface ContextType {
@@ -27,7 +31,19 @@ interface ContextType {
 
 export const Profile: React.FC = () => {
   const { user, refreshState, addToast, onOpenAuth } = useOutletContext<ContextType>();
-  const [activeTab, setActiveTab] = useState<'activity' | 'rewards' | 'settings'>('activity');
+  const [activeTab, setActiveTab] = useState<'activity' | 'rewards' | 'ledger' | 'settings'>('activity');
+  const [ledgerItems, setLedgerItems] = useState<PointsLedgerItem[]>([]);
+  const [isLoadingLedger, setIsLoadingLedger] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      setIsLoadingLedger(true);
+      fetchPointsLedger(user.id).then((items) => {
+        setLedgerItems(items);
+        setIsLoadingLedger(false);
+      });
+    }
+  }, [user?.id, activeTab]);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(user.name);
@@ -190,6 +206,18 @@ export const Profile: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setActiveTab('ledger')}
+          className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 ${
+            activeTab === 'ledger'
+              ? 'bg-[#15803D] text-white shadow-sm'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          Points Ledger ({ledgerItems.length})
+        </button>
+
+        <button
           onClick={() => setActiveTab('settings')}
           className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 ${
             activeTab === 'settings'
@@ -265,7 +293,74 @@ export const Profile: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 3: Settings */}
+        {/* Tab 3: Points Ledger History */}
+        {activeTab === 'ledger' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-[#17211B] flex items-center gap-2">
+                <History className="w-4 h-4 text-[#15803D]" />
+                Immutable Points Ledger
+              </h3>
+              <span className="text-xs text-[#15803D] font-extrabold bg-[#DCFCE7] px-3 py-1 rounded-full border border-emerald-200">
+                Balance: {user.ecoPoints} Eco Points
+              </span>
+            </div>
+
+            {isLoadingLedger ? (
+              <p className="text-xs text-slate-400 py-6 text-center">Loading ledger history...</p>
+            ) : ledgerItems.length === 0 ? (
+              <p className="text-xs text-slate-400 py-6 text-center">No transactions recorded in points ledger yet.</p>
+            ) : (
+              <div className="space-y-2.5">
+                {ledgerItems.map((item) => {
+                  const isPositive = item.points > 0;
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-3.5 rounded-2xl bg-[#F7FAF7] border border-slate-200/80 flex items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                            isPositive
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-rose-100 text-rose-700'
+                          }`}
+                        >
+                          {isPositive ? (
+                            <TrendingUp className="w-4 h-4" />
+                          ) : (
+                            <TrendingDown className="w-4 h-4" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-xs sm:text-sm text-[#17211B]">
+                            {item.description}
+                          </h4>
+                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mt-0.5">
+                            {item.actionType} • {new Date(item.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`font-extrabold text-xs sm:text-sm px-3 py-1 rounded-full ${
+                          isPositive
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : 'bg-rose-100 text-rose-800 border border-rose-200'
+                        }`}
+                      >
+                        {isPositive ? `+${item.points}` : item.points} Pts
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 4: Settings */}
         {activeTab === 'settings' && (
           <div className="space-y-6 max-w-lg">
             <div className="space-y-2">

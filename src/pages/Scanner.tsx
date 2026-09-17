@@ -19,8 +19,10 @@ import {
   Tag,
   RefreshCw,
   Target,
-  Zap
+  Zap,
+  AlertTriangle
 } from 'lucide-react';
+import { saveWasteScanSupabase } from '../utils/supabaseService';
 
 interface ContextType {
   user: User;
@@ -29,7 +31,7 @@ interface ContextType {
 }
 
 export const Scanner: React.FC = () => {
-  const { refreshState, addToast } = useOutletContext<ContextType>();
+  const { user, refreshState, addToast } = useOutletContext<ContextType>();
   const navigate = useNavigate();
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export const Scanner: React.FC = () => {
     // Perform visual feature extraction
     const classified = await classifyImageAsync(imgToUse, classificationOverride, nameToUse);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsScanning(false);
 
       const newScan = addScan({
@@ -67,10 +69,18 @@ export const Scanner: React.FC = () => {
         imageUrl: imgToUse
       });
 
+      if (user?.id) {
+        await saveWasteScanSupabase(newScan, user.id);
+      }
+
       setScanResult(newScan);
       setScansHistory(getScans());
       refreshState();
-      addToast('success', 'Scan Completed', `Item classified: ${classified.itemName}`);
+      if (classified.confidence < 70) {
+        addToast('warning', 'Low Confidence Scan', 'Low confidence — please verify the waste type manually.');
+      } else {
+        addToast('success', 'Scan Completed', `Item classified: ${classified.itemName}`);
+      }
     }, 1200);
   };
 
@@ -264,6 +274,21 @@ export const Scanner: React.FC = () => {
                     <span className="font-bold text-slate-800 text-sm">{scanResult.type}</span>
                   </div>
                 </div>
+
+                {/* Low Confidence Warning Alert (< 70%) */}
+                {scanResult.confidence < 70 && (
+                  <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <span className="font-extrabold text-amber-900 block">
+                        Low confidence — please verify the waste type manually.
+                      </span>
+                      <p className="text-[11px] text-amber-700 leading-normal">
+                        The visual scanner detected lower feature certainty ({scanResult.confidence}%). Cross-reference with the item label or consult disposal guide.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Recommended Action Checklist */}
                 <div className="space-y-2.5">

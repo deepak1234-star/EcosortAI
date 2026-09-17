@@ -202,13 +202,12 @@ export const Login: React.FC = () => {
                 Password
               </label>
               {mode === 'login' && (
-                <button
-                  type="button"
-                  onClick={() => addToast('info', 'Password Help', 'Password reset instructions sent to your email.')}
+                <NavLink
+                  to="/forgot-password"
                   className="text-xs text-[#15803D] hover:underline font-semibold"
                 >
                   Forgot password?
-                </button>
+                </NavLink>
               )}
             </div>
             <div className="relative">

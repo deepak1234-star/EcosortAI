@@ -6,6 +6,7 @@ import type { CommunityActivity, CommunitySubmission, User } from '../types';
 import { Modal } from '../components/Modal';
 import { ImageUploader } from '../components/ImageUploader';
 import { StatusBadge } from '../components/StatusBadge';
+import { saveSubmissionSupabase } from '../utils/supabaseService';
 import {
   Users,
   Sparkles,
@@ -37,6 +38,7 @@ export const Community: React.FC = () => {
   const [beforeImage, setBeforeImage] = useState<string | null>(null);
   const [afterImage, setAfterImage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const iconMap: Record<string, React.ReactNode> = {
     Sparkles: <Sparkles className="w-6 h-6 text-emerald-600" />,
@@ -54,9 +56,10 @@ export const Community: React.FC = () => {
     setBeforeImage(null);
     setAfterImage(null);
     setFormError(null);
+    setIsSubmitting(false);
   };
 
-  const handleSubmitActivity = (e: React.FormEvent) => {
+  const handleSubmitActivity = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
@@ -70,7 +73,33 @@ export const Community: React.FC = () => {
       return;
     }
 
-    if (!selectedActivity) return;
+    if (!selectedActivity || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    const newSub: CommunitySubmission = {
+      id: `sub_${Date.now()}`,
+      activityId: selectedActivity.id,
+      activityName: selectedActivity.title,
+      date: formDate,
+      location: formLocation.trim(),
+      description: formDescription.trim(),
+      beforeImage,
+      afterImage,
+      status: 'Pending Verification',
+      rewardPoints: selectedActivity.rewardPoints,
+      participantName: formName || user.name
+    };
+
+    if (user?.id) {
+      const result = await saveSubmissionSupabase(newSub, user.id);
+      if (!result.success) {
+        setFormError(result.message);
+        addToast('warning', 'Duplicate Submission', result.message);
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     addSubmission({
       activityId: selectedActivity.id,
@@ -86,12 +115,13 @@ export const Community: React.FC = () => {
 
     setSubmissions(getSubmissions());
     refreshState();
+    setIsSubmitting(false);
     setSelectedActivity(null);
 
     addToast(
       'success',
       'Activity Submitted ✓',
-      'Your submission is now Pending Verification. Points will be awarded upon approval.'
+      'Your submission is recorded and pending verification. Points logged to ledger.'
     );
   };
 
@@ -308,9 +338,10 @@ export const Community: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-[#15803D] hover:bg-[#15803D]/90 text-white font-bold text-sm rounded-xl shadow-md transition-all transform active:scale-95"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-[#15803D] hover:bg-[#15803D]/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm rounded-xl shadow-md transition-all transform active:scale-95 flex items-center gap-2"
               >
-                Submit Activity
+                {isSubmitting ? 'Submitting...' : 'Submit Activity'}
               </button>
             </div>
           </form>

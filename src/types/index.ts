@@ -96,3 +96,13 @@ export interface ToastMessage {
   title: string;
   message?: string;
 }
+
+export interface PointsLedgerItem {
+  id: string;
+  userId: string;
+  points: number;
+  actionType: 'WELCOME_BONUS' | 'WASTE_SCAN' | 'COMMUNITY_WORK' | 'REWARD_REDEMPTION';
+  description: string;
+  createdAt: string;
+}
+

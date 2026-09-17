@@ -6,6 +6,7 @@ import type { Reward, RewardRedemption, User } from '../types';
 import { SmartImage } from '../components/SmartImage';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { StatusBadge } from '../components/StatusBadge';
+import { saveRedemptionSupabase } from '../utils/supabaseService';
 import { Leaf, Gift, CheckCircle2, History, AlertCircle, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -19,6 +20,7 @@ export const Rewards: React.FC = () => {
   const { user, refreshState, addToast } = useOutletContext<ContextType>();
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isRedeeming, setIsRedeeming] = useState(false);
   const [redemptionsHistory, setRedemptionsHistory] = useState<RewardRedemption[]>(getRedemptions());
 
   const handleOpenRedeem = (reward: Reward) => {
@@ -34,8 +36,31 @@ export const Rewards: React.FC = () => {
     setIsConfirming(true);
   };
 
-  const handleConfirmRedeem = () => {
-    if (!selectedReward) return;
+  const handleConfirmRedeem = async () => {
+    if (!selectedReward || isRedeeming) return;
+
+    setIsRedeeming(true);
+
+    const newRedemption: RewardRedemption = {
+      id: `red_${Date.now()}`,
+      rewardId: selectedReward.id,
+      rewardName: selectedReward.name,
+      points: selectedReward.points,
+      date: new Date().toISOString().split('T')[0],
+      status: 'Fulfilled',
+      image: selectedReward.image
+    };
+
+    if (user?.id) {
+      const supRes = await saveRedemptionSupabase(newRedemption, user.id);
+      if (!supRes.success) {
+        addToast('error', 'Redemption Failed', supRes.message);
+        setIsRedeeming(false);
+        setIsConfirming(false);
+        setSelectedReward(null);
+        return;
+      }
+    }
 
     const res = redeemReward(selectedReward);
     if (res.success) {
@@ -51,6 +76,7 @@ export const Rewards: React.FC = () => {
       addToast('error', 'Redemption Failed', res.message);
     }
 
+    setIsRedeeming(false);
     setIsConfirming(false);
     setSelectedReward(null);
   };
