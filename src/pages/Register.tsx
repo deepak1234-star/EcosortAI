@@ -1,31 +1,31 @@
 import React from 'react';
-import { SignIn } from "@clerk/clerk-react";
+import { SignUp } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
-import { Lock } from "lucide-react";
+import { UserPlus } from "lucide-react";
 
-export const Login: React.FC = () => {
+export const Register: React.FC = () => {
   return (
     <div className="min-h-[calc(100vh-8rem)] flex flex-col justify-center items-center px-4 py-12">
       <div className="w-full max-w-md space-y-6 flex flex-col items-center">
         {/* Header Icon & Title */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 mb-2">
-            <Lock className="w-6 h-6" />
+            <UserPlus className="w-6 h-6" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Welcome Back
+            Create Your Account
           </h1>
           <p className="text-slate-400 text-sm">
-            Sign in with your Google Account or credentials to access your dashboard
+            Sign up using Google OAuth or your email address to get started
           </p>
         </div>
 
-        {/* Clerk SignIn Component Container */}
+        {/* Clerk SignUp Component Container */}
         <div className="w-full flex justify-center">
-          <SignIn
-            path="/login"
+          <SignUp
+            path="/register"
             routing="path"
-            signUpUrl="/register"
+            signInUrl="/login"
             fallbackRedirectUrl="/dashboard"
             appearance={{
               elements: {
@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
                 card: "w-full max-w-md bg-slate-900/90 border border-slate-800 shadow-2xl p-6 sm:p-8 rounded-2xl backdrop-blur-xl",
                 headerTitle: "text-white text-xl font-bold text-center",
                 headerSubtitle: "text-slate-400 text-sm text-center",
-                socialButtonsBlockButton: 
+                socialButtonsBlockButton:
                   "bg-slate-800 border-slate-700 hover:bg-slate-700/80 text-white font-medium py-3 rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2 text-sm",
                 socialButtonsBlockButtonText: "text-white font-medium text-sm",
                 formButtonPrimary:
@@ -44,7 +44,6 @@ export const Login: React.FC = () => {
                 dividerLine: "bg-slate-800",
                 dividerText: "text-slate-500 text-xs uppercase font-medium bg-slate-900 px-2",
                 identityPreviewText: "text-white font-medium",
-                formResendCodeLink: "text-cyan-400 hover:text-cyan-300 text-sm",
               }
             }}
           />
@@ -61,4 +60,4 @@ export const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default Register;

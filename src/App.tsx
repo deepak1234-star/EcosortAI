@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Scanner } from './pages/Scanner';
@@ -8,12 +9,12 @@ import { Community } from './pages/Community';
 import { Rewards } from './pages/Rewards';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
-import { subscribeAuthState } from './utils/authService';
 import type { User } from './types';
 
-// Protected Route: Requires authenticated Supabase session
+// Protected Route: Requires authenticated Clerk session
 const ProtectedRoute: React.FC<{ user: User | null; loading: boolean; children: React.ReactNode }> = ({
   user,
   loading,
@@ -69,19 +70,17 @@ const RootRedirect: React.FC<{ user: User | null; loading: boolean }> = ({ user,
 };
 
 export const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { isLoaded, isSignedIn, user: clerkUser } = useUser();
+  const loading = !isLoaded;
 
-  useEffect(() => {
-    const unsubscribe = subscribeAuthState((sessionUser, isChecking) => {
-      setUser(sessionUser);
-      setLoading(isChecking);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+  const user: User | null = isSignedIn && clerkUser ? {
+    id: clerkUser.id,
+    email: clerkUser.primaryEmailAddress?.emailAddress || '',
+    user_metadata: {
+      full_name: clerkUser.fullName || clerkUser.username || clerkUser.primaryEmailAddress?.emailAddress || '',
+      avatar_url: clerkUser.imageUrl || ''
+    }
+  } : null;
 
   return (
     <BrowserRouter>
@@ -137,7 +136,7 @@ export const App: React.FC = () => {
             }
           />
           <Route
-            path="login"
+            path="login/*"
             element={
               <PublicOnlyRoute user={user} loading={loading}>
                 <Login />
@@ -145,10 +144,18 @@ export const App: React.FC = () => {
             }
           />
           <Route
-            path="register"
+            path="register/*"
             element={
               <PublicOnlyRoute user={user} loading={loading}>
-                <Login />
+                <Register />
+              </PublicOnlyRoute>
+            }
+          />
+          <Route
+            path="signup/*"
+            element={
+              <PublicOnlyRoute user={user} loading={loading}>
+                <Register />
               </PublicOnlyRoute>
             }
           />

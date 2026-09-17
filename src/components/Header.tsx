@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useClerk } from '@clerk/clerk-react';
 import type { User } from '../types';
 import { Leaf, ShieldCheck, LogIn, UserPlus, LogOut, User as UserIcon, ChevronDown, Menu } from 'lucide-react';
 import { getCurrentSessionUser, logoutSession } from '../utils/authService';
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { signOut } = useClerk();
 
   const isLoggedIn = !!(user && user.id && user.id !== 'usr_guest');
 
@@ -36,6 +38,11 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (e) {
+      console.error(e);
+    }
     await logoutSession();
     setIsDropdownOpen(false);
     onUserChanged();
