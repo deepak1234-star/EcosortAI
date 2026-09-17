@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { saveUser, resetStorage, getSubmissions, getRedemptions } from '../utils/storage';
 import { logoutSession } from '../utils/authService';
 import type { User, CommunitySubmission, RewardRedemption, PointsLedgerItem } from '../types';
-import { fetchPointsLedger } from '../utils/supabaseService';
+import { fetchPointsLedger, updateProfileSupabase } from '../utils/supabaseService';
 import { StatusBadge } from '../components/StatusBadge';
 import {
   Leaf,
@@ -48,17 +48,25 @@ export const Profile: React.FC = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(user.name);
 
+  useEffect(() => {
+    if (user?.name) {
+      setNameInput(user.name);
+    }
+  }, [user?.name]);
+
   const submissions: CommunitySubmission[] = getSubmissions();
   const redemptions: RewardRedemption[] = getRedemptions();
 
-  const handleSaveName = (e: React.FormEvent) => {
+  const handleSaveName = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nameInput.trim()) return;
 
-    saveUser({
+    const updated = {
       ...user,
       name: nameInput.trim()
-    });
+    };
+    saveUser(updated);
+    await updateProfileSupabase(updated);
     refreshState();
     setIsEditingName(false);
     addToast('success', 'Profile Updated', 'Your account name has been updated.');

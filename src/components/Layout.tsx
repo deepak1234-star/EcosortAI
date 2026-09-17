@@ -7,7 +7,8 @@ import { ToastContainer } from './Toast';
 import { DemoAdminModal } from './DemoAdminModal';
 import { AuthModal } from './AuthModal';
 import { getSubmissions } from '../utils/storage';
-import { getCurrentSessionUser, subscribeAuthState } from '../utils/authService';
+import { getCurrentSessionUser } from '../utils/authService';
+import { fetchUserProfileSupabase } from '../utils/supabaseService';
 import type { User, ToastMessage } from '../types';
 import { REAL_PHOTO_ASSETS } from '../utils/photoAssets';
 
@@ -41,15 +42,17 @@ export const Layout: React.FC<LayoutProps> = ({ user: activeSessionUser, loading
   useEffect(() => {
     if (activeSessionUser) {
       setCurrentUser(activeSessionUser);
-    } else {
-      const live = getCurrentSessionUser();
-      setCurrentUser(live || GUEST_USER);
     }
   }, [activeSessionUser]);
 
-  const refreshState = () => {
-    const live = getCurrentSessionUser();
-    setCurrentUser(live || GUEST_USER);
+  const refreshState = async () => {
+    const live = activeSessionUser || getCurrentSessionUser();
+    if (live && live.id && live.id !== 'usr_guest') {
+      const refreshed = await fetchUserProfileSupabase(live.id, live.email, live.name);
+      setCurrentUser(refreshed);
+    } else {
+      setCurrentUser(GUEST_USER);
+    }
     const submissions = getSubmissions();
     const pending = submissions.filter((s) => s.status === 'Pending Verification').length;
     setPendingCount(pending);

@@ -612,3 +612,98 @@ export async function signOutSupabase(): Promise<void> {
     // Ignore signout warnings
   }
 }
+
+/**
+ * Synchronize Clerk authenticated user with Supabase database.
+ * Upserts profile into `profiles` table and computes points ledger total.
+ */
+export async function syncClerkUserToSupabase(clerkUser: {
+  id: string;
+  primaryEmailAddress?: { emailAddress: string } | null;
+  emailAddresses?: Array<{ emailAddress: string }>;
+  fullName?: string | null;
+  username?: string | null;
+  imageUrl?: string | null;
+}): Promise<User> {
+  const userId = clerkUser.id;
+  const email =
+    clerkUser.primaryEmailAddress?.emailAddress ||
+    clerkUser.emailAddresses?.[0]?.emailAddress ||
+    '';
+  const displayName =
+    clerkUser.fullName || clerkUser.username || email.split('@')[0] || 'Community Member';
+  const avatar = clerkUser.imageUrl || REAL_PHOTO_ASSETS.avatar_deepak;
+
+  try {
+    // 1. Check existing profile in Supabase
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (profile) {
+      const totalPoints = await fetchUserPointsTotal(userId);
+      const scansCount = await fetchUserScansCount(userId);
+      const activitiesCount = await fetchUserSubmissionsCount(userId);
+
+      const userObj: User = {
+        id: profile.id,
+        name: profile.name || displayName,
+        email: profile.email || email,
+        role: (profile.role as RoleType) || 'Community Member',
+        ecoPoints: totalPoints,
+        activitiesCompleted: activitiesCount,
+        scansCompleted: scansCount,
+        avatar: profile.avatar_url || avatar
+      };
+      return userObj;
+    }
+
+    // 2. Insert new profile into Supabase
+    const newUser: User = {
+      id: userId,
+      name: displayName,
+      email: email,
+      role: 'Community Member',
+      ecoPoints: 100,
+      activitiesCompleted: 0,
+      scansCompleted: 0,
+      avatar: avatar
+    };
+
+    await supabase.from('profiles').upsert([
+      {
+        id: userId,
+        name: displayName,
+        email: email,
+        role: 'Community Member',
+        avatar_url: avatar,
+        updated_at: new Date().toISOString()
+      }
+    ]);
+
+    // 3. Log +100 Eco Points Welcome Bonus to ledger
+    await addPointsLedgerEntry(
+      userId,
+      100,
+      'WELCOME_BONUS',
+      'Sign-up Welcome Bonus (+100 Eco Points)'
+    );
+
+    return newUser;
+  } catch (err) {
+    console.warn('Sync Clerk user to Supabase warning:', err);
+    return {
+      id: userId,
+      name: displayName,
+      email: email,
+      role: 'Community Member',
+      ecoPoints: 100,
+      activitiesCompleted: 0,
+      scansCompleted: 0,
+      avatar: avatar
+    };
+  }
+}
+

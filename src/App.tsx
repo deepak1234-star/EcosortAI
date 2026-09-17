@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { Layout } from './components/Layout';
@@ -12,6 +12,8 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { syncClerkUserToSupabase } from './utils/supabaseService';
+import { setCurrentSessionUser } from './utils/authService';
 import type { User } from './types';
 
 // Protected Route: Requires authenticated Clerk session
@@ -71,16 +73,45 @@ const RootRedirect: React.FC<{ user: User | null; loading: boolean }> = ({ user,
 
 export const App: React.FC = () => {
   const { isLoaded, isSignedIn, user: clerkUser } = useUser();
-  const loading = !isLoaded;
+  const [syncedUser, setSyncedUser] = useState<User | null>(null);
+  const [isSyncing, setIsSyncing] = useState<boolean>(true);
 
-  const user: User | null = isSignedIn && clerkUser ? {
-    id: clerkUser.id,
-    email: clerkUser.primaryEmailAddress?.emailAddress || '',
-    user_metadata: {
-      full_name: clerkUser.fullName || clerkUser.username || clerkUser.primaryEmailAddress?.emailAddress || '',
-      avatar_url: clerkUser.imageUrl || ''
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (!isLoaded) {
+      setIsSyncing(true);
+      return;
     }
-  } : null;
+
+    if (isSignedIn && clerkUser) {
+      setIsSyncing(true);
+      syncClerkUserToSupabase(clerkUser)
+        .then((userObj) => {
+          if (!isCancelled) {
+            setCurrentSessionUser(userObj);
+            setSyncedUser(userObj);
+            setIsSyncing(false);
+          }
+        })
+        .catch(() => {
+          if (!isCancelled) {
+            setIsSyncing(false);
+          }
+        });
+    } else {
+      setCurrentSessionUser(null);
+      setSyncedUser(null);
+      setIsSyncing(false);
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isLoaded, isSignedIn, clerkUser?.id]);
+
+  const loading = !isLoaded || isSyncing;
+  const user = syncedUser;
 
   return (
     <BrowserRouter>
