@@ -128,12 +128,13 @@ export const App: React.FC = () => {
           />
           <Route
             path="scanner"
-            element={
-              <ProtectedRoute user={user} loading={loading}>
-                <Scanner />
-              </ProtectedRoute>
-            }
+            element={<Scanner />}
           />
+          <Route
+            path="ecosort"
+            element={<Scanner />}
+          />
+
           <Route
             path="disposal-guide"
             element={

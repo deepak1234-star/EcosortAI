@@ -136,21 +136,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleQuickPersona = async (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    try {
-      const res = await loginUser({ email: demoEmail, password: demoPass });
-      if (res.success) {
-        addToast('success', 'Logged In ✓', res.message);
-        onSuccess();
-        onClose();
-      }
-    } catch (e) {
-      // Ignore persona error
-    }
-  };
-
   const roleOptions: { type: RoleType; title: string; desc: string; icon: React.ReactNode }[] = [
     {
       type: 'Community Member',

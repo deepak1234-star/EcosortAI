@@ -71,7 +71,7 @@ export const subscribeAuthState = (
   });
 
   // 2. Subscribe to auth changes (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, USER_UPDATED)
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
     if (!isMounted) return;
     if (session?.user) {
       const user = await fetchUserProfileSupabase(

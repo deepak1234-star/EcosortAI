@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useClerk } from '@clerk/clerk-react';
 import type { User } from '../types';
 import { Leaf, ShieldCheck, LogIn, UserPlus, LogOut, User as UserIcon, ChevronDown, Menu } from 'lucide-react';
-import { getCurrentSessionUser, logoutSession } from '../utils/authService';
+import { logoutSession } from '../utils/authService';
 
 interface HeaderProps {
   user: User;

@@ -28,7 +28,7 @@ interface LayoutProps {
   loading: boolean;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ user: activeSessionUser, loading }) => {
+export const Layout: React.FC<LayoutProps> = ({ user: activeSessionUser }) => {
   const [currentUser, setCurrentUser] = useState<User>(activeSessionUser || GUEST_USER);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);

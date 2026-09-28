@@ -31,12 +31,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // Exactly 6 unique navigation items
   const navItems = [
     { label: 'Dashboard', path: isLoggedIn ? '/dashboard' : '/login', icon: LayoutDashboard },
-    { label: 'AI Scanner', path: isLoggedIn ? '/scanner' : '/login', icon: ScanLine },
+    { label: 'AI Scanner', path: isLoggedIn ? '/ecosort' : '/login', icon: ScanLine },
     { label: 'Disposal Guide', path: isLoggedIn ? '/disposal-guide' : '/login', icon: BookOpen },
     { label: 'Community', path: isLoggedIn ? '/community' : '/login', icon: Users },
     { label: 'Rewards', path: isLoggedIn ? '/rewards' : '/login', icon: Gift },
     { label: 'Profile', path: isLoggedIn ? '/profile' : '/login', icon: User }
   ];
+
 
   return (
     <>
@@ -105,7 +106,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive =
+              location.pathname === item.path ||
+              (item.path.includes('ecosort') && location.pathname === '/scanner') ||
+              (item.path.includes('scanner') && location.pathname === '/ecosort');
 
             return (
               <NavLink

@@ -18,9 +18,44 @@ export const analyzeImagePixels = (
   fileName?: string
 ): Promise<VisualAnalysisResult> => {
   return new Promise((resolve) => {
-    // First check file name heuristic if available
+    // 1. Check file name heuristic if available
     const lowerName = (fileName || '').toLowerCase();
-    if (lowerName.includes('fruit') || lowerName.includes('veg') || lowerName.includes('food') || lowerName.includes('peel') || lowerName.includes('apple') || lowerName.includes('organic')) {
+
+    // Metal / Cans / Aluminum
+    if (
+      lowerName.includes('can') ||
+      lowerName.includes('tin') ||
+      lowerName.includes('aluminum') ||
+      lowerName.includes('soda') ||
+      lowerName.includes('beer') ||
+      lowerName.includes('beverage') ||
+      lowerName.includes('metal') ||
+      lowerName.includes('foil')
+    ) {
+      resolve({
+        itemName: 'Aluminum Beverage / Metal Can',
+        category: 'Metal',
+        confidence: 96,
+        type: 'Aluminum / Steel',
+        recommendedActions: [
+          'Rinse clean of all liquid or beverage residue.',
+          'Crush or compress metal can to maximize bin capacity.',
+          'Place in designated dry metal recycling stream.'
+        ]
+      });
+      return;
+    }
+
+    // Organic Food & Scraps
+    if (
+      lowerName.includes('fruit') ||
+      lowerName.includes('veg') ||
+      lowerName.includes('food') ||
+      lowerName.includes('peel') ||
+      lowerName.includes('apple') ||
+      lowerName.includes('banana') ||
+      lowerName.includes('organic')
+    ) {
       resolve({
         itemName: 'Organic Food Scraps & Produce',
         category: 'Organic',
@@ -35,16 +70,64 @@ export const analyzeImagePixels = (
       return;
     }
 
-    if (lowerName.includes('phone') || lowerName.includes('elec') || lowerName.includes('battery') || lowerName.includes('cable')) {
+    // Electronics & E-Waste
+    if (
+      lowerName.includes('phone') ||
+      lowerName.includes('elec') ||
+      lowerName.includes('battery') ||
+      lowerName.includes('cable') ||
+      lowerName.includes('laptop')
+    ) {
       resolve({
         itemName: 'Electronic Device / E-Waste',
         category: 'E-Waste',
-        confidence: 93,
+        confidence: 94,
         type: 'Electronic Waste',
         recommendedActions: [
           'Do not place electronic waste in regular trash bins.',
           'Deliver to authorized school or municipal e-waste collection center.',
           'Wipe personal data from digital devices prior to disposal.'
+        ]
+      });
+      return;
+    }
+
+    // Paper & Cardboard
+    if (
+      lowerName.includes('paper') ||
+      lowerName.includes('cardboard') ||
+      lowerName.includes('box') ||
+      lowerName.includes('carton')
+    ) {
+      resolve({
+        itemName: 'Paperboard & Cardboard Packaging',
+        category: 'Paper',
+        confidence: 94,
+        type: 'Paperboard / Cardboard',
+        recommendedActions: [
+          'Flatten cardboard boxes to optimize bin space.',
+          'Ensure material is dry and clean from grease.',
+          'Deposit into designated blue paper recycling bin.'
+        ]
+      });
+      return;
+    }
+
+    // Glass
+    if (
+      lowerName.includes('glass') ||
+      lowerName.includes('jar') ||
+      lowerName.includes('wine')
+    ) {
+      resolve({
+        itemName: 'Glass Bottle / Jar Container',
+        category: 'Glass',
+        confidence: 95,
+        type: 'Glass Container',
+        recommendedActions: [
+          'Rinse clean and remove metal or plastic lids.',
+          'Handle carefully to prevent breakage.',
+          'Deposit in dedicated glass recycling drop-off.'
         ]
       });
       return;
@@ -73,7 +156,8 @@ export const analyzeImagePixels = (
         let greenCount = 0;
         let earthyCount = 0;
         let whitePaperCount = 0;
-        let darkMetallicCount = 0;
+        let metallicCount = 0;
+        let darkCount = 0;
         let totalPixels = data.length / 4;
 
         for (let i = 0; i < data.length; i += 4) {
@@ -81,30 +165,48 @@ export const analyzeImagePixels = (
           const g = data[i + 1];
           const b = data[i + 2];
 
-          // Green / Vegetation / Fruits / Veggies (g > r and g > b)
-          if (g > r + 10 && g > b + 10) {
+          // Metallic / Aluminum Silver (neutral grey balance with high reflection highlights)
+          const isNeutral = Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && Math.abs(r - b) < 20;
+          if (isNeutral && r >= 110 && r <= 220) {
+            metallicCount++;
+          }
+          // Green vegetation / Food (g > r and g > b)
+          else if (g > r + 15 && g > b + 15) {
             greenCount++;
           }
-          // Earthy Brown / Organic (r > 100, g > 60, b < 90)
+          // Earthy Brown / Organic
           else if (r > 100 && g > 60 && g < r && b < 100) {
             earthyCount++;
           }
-          // Paper / Cardboard (High brightness, low color delta)
-          else if (r > 180 && g > 180 && b > 180 && Math.abs(r - g) < 20 && Math.abs(r - b) < 20) {
+          // Clean Paper / Cardboard (Very high brightness)
+          else if (r > 200 && g > 200 && b > 200 && isNeutral) {
             whitePaperCount++;
           }
-          // Dark / Metallic / Electronic / Hazardous
-          else if (r < 70 && g < 70 && b < 70) {
-            darkMetallicCount++;
+          // Dark / E-Waste
+          else if (r < 60 && g < 60 && b < 60) {
+            darkCount++;
           }
         }
 
+        const metallicRatio = metallicCount / totalPixels;
         const greenRatio = (greenCount + earthyCount) / totalPixels;
         const paperRatio = whitePaperCount / totalPixels;
-        const darkRatio = darkMetallicCount / totalPixels;
+        const darkRatio = darkCount / totalPixels;
 
-        // Classification decision based on visual feature extraction
-        if (greenRatio > 0.22) {
+        // Decision logic
+        if (metallicRatio > 0.22) {
+          resolve({
+            itemName: 'Aluminum / Metal Can Container',
+            category: 'Metal',
+            confidence: Math.min(97, Math.round(85 + metallicRatio * 30)),
+            type: 'Aluminum / Steel',
+            recommendedActions: [
+              'Rinse out food or drink residue.',
+              'Crush flat to optimize recycling volume.',
+              'Deposit into dedicated metal recycling collection.'
+            ]
+          });
+        } else if (greenRatio > 0.2) {
           resolve({
             itemName: 'Organic Produce & Food Scraps',
             category: 'Organic',
@@ -112,7 +214,7 @@ export const analyzeImagePixels = (
             type: 'Organic Waste',
             recommendedActions: [
               'Place in organic green compost bin.',
-              'Keep separate from plastic bags, synthetic wrappers, and inorganic recyclables.',
+              'Keep separate from plastic bags and non-biodegradable trash.',
               'Suitable for community composting or municipal wet-waste processing.'
             ]
           });
@@ -128,7 +230,7 @@ export const analyzeImagePixels = (
               'Deposit in clean paper stream bin.'
             ]
           });
-        } else if (darkRatio > 0.35) {
+        } else if (darkRatio > 0.4) {
           resolve({
             itemName: 'Electronic Device or Metal Waste',
             category: 'E-Waste',
@@ -141,11 +243,10 @@ export const analyzeImagePixels = (
             ]
           });
         } else {
-          // Default Plastic / Container visual profile
           resolve({
-            itemName: 'Plastic Bottle / Packaging Container',
+            itemName: 'Plastic Container / Packaging',
             category: 'Plastic',
-            confidence: 91,
+            confidence: 90,
             type: 'Plastic (PET 1 / HDPE 2)',
             recommendedActions: [
               'Empty liquid or food contents completely.',
@@ -168,26 +269,27 @@ export const analyzeImagePixels = (
 };
 
 const getFallbackResult = (lowerName: string): VisualAnalysisResult => {
-  if (lowerName.includes('paper') || lowerName.includes('cardboard')) {
+  if (lowerName.includes('can') || lowerName.includes('tin') || lowerName.includes('metal')) {
     return {
-      itemName: 'Paper & Packaging Waste',
-      category: 'Paper',
-      confidence: 90,
-      type: 'Paperboard',
+      itemName: 'Metal Beverage Can',
+      category: 'Metal',
+      confidence: 94,
+      type: 'Aluminum / Steel',
       recommendedActions: [
-        'Keep paper clean and dry.',
-        'Deposit into paper recycling bin.'
+        'Rinse clean of residue.',
+        'Crush flat to save space.',
+        'Deposit in metal recyclables bin.'
       ]
     };
   }
   return {
-    itemName: 'Plastic Container Waste',
+    itemName: 'Recyclable Plastic Container',
     category: 'Plastic',
-    confidence: 92,
-    type: 'Recyclable Plastic',
+    confidence: 88,
+    type: 'Plastic (PET 1)',
     recommendedActions: [
       'Empty and rinse clean.',
-      'Place in recyclable plastic bin.'
+      'Place in dry plastic recycling bin.'
     ]
   };
 };

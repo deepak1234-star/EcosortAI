@@ -16,7 +16,7 @@ export const MobileNavigation: React.FC = () => {
 
   const items = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'Scan', path: '/scanner', icon: ScanLine },
+    { label: 'EcoSort', path: '/ecosort', icon: ScanLine },
     { label: 'Community', path: '/community', icon: Users },
     { label: 'Rewards', path: '/rewards', icon: Gift },
     { label: 'Profile', path: '/profile', icon: User }
@@ -31,19 +31,24 @@ export const MobileNavigation: React.FC = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-150 ${
-                  isActive
+              className={({ isActive }) => {
+                const isCurrentActive =
+                  isActive ||
+                  (item.path === '/ecosort' && window.location.pathname === '/scanner') ||
+                  (item.path === '/scanner' && window.location.pathname === '/ecosort');
+                return `flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all duration-150 ${
+                  isCurrentActive
                     ? 'text-[#15803D] font-bold scale-105'
                     : 'text-slate-500 hover:text-slate-900 font-medium'
-                }`
-              }
+                }`;
+              }}
             >
               <Icon className="w-5 h-5" />
               <span className="text-[11px] mt-0.5">{item.label}</span>
             </NavLink>
           );
         })}
+
       </nav>
     </div>
   );

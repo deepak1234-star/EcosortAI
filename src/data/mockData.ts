@@ -33,6 +33,8 @@ export const DEMO_CLASSIFICATIONS: DemoClassification[] = [
       'Keep it clean and dry.',
       'Place it in the appropriate recyclable/dry-waste stream according to local rules.'
     ],
+    dosAndDonts: "Do: Rinse clean, crush to save space, and place in yellow plastics bin. Don't: Throw away with food waste or leave full of liquids.",
+    lifespan: '450 years',
     sampleImage: REAL_PHOTO_ASSETS.demo_plastic_bottle
   },
   {
@@ -46,6 +48,8 @@ export const DEMO_CLASSIFICATIONS: DemoClassification[] = [
       'Keep separate from non-biodegradable materials.',
       'Suitable for home composting or municipal organic processing.'
     ],
+    dosAndDonts: "Do: Dispose in green compost bin or garden compost pile. Don't: Seal inside plastic bags or mix with inorganic recyclables.",
+    lifespan: '2-5 weeks',
     sampleImage: REAL_PHOTO_ASSETS.demo_banana_peel
   },
   {
@@ -59,6 +63,8 @@ export const DEMO_CLASSIFICATIONS: DemoClassification[] = [
       'Flatten if appropriate to save recycling container space.',
       'Deposit in dedicated metal recycling collection.'
     ],
+    dosAndDonts: "Do: Rinse residue clean and crush flat if possible. Don't: Leave food contents inside or throw pressurized aerosol cans into fire.",
+    lifespan: '50-200 years',
     sampleImage: REAL_PHOTO_ASSETS.demo_metal_can
   },
   {
@@ -72,6 +78,8 @@ export const DEMO_CLASSIFICATIONS: DemoClassification[] = [
       'Handle with care to avoid glass breakage.',
       'Place into authorized glass drop-off bin or bottle bank.'
     ],
+    dosAndDonts: "Do: Rinse clean and remove lids. Don't: Mix broken window glass or ceramic dishware with bottle glass.",
+    lifespan: '1,000,000+ years',
     sampleImage: REAL_PHOTO_ASSETS.demo_glass_bottle
   },
   {
@@ -85,6 +93,8 @@ export const DEMO_CLASSIFICATIONS: DemoClassification[] = [
       'Follow appropriate authorized e-waste disposal guidance.',
       'Wipe personal data prior to dropping off at e-waste collection center.'
     ],
+    dosAndDonts: "Do: Perform factory reset and deliver to an e-waste collection kiosk. Don't: Throw in regular household trash or incinerator.",
+    lifespan: '1,000+ years (Non-biodegradable heavy metals & plastics)',
     sampleImage: REAL_PHOTO_ASSETS.demo_mobile_phone
   },
   {
@@ -98,6 +108,8 @@ export const DEMO_CLASSIFICATIONS: DemoClassification[] = [
       'Tape terminals for lithium or high-voltage batteries for safe storage.',
       'Handle and dispose of them according to appropriate local hazardous-waste guidance.'
     ],
+    dosAndDonts: "Do: Tape battery terminals with electrical tape and bring to hazardous waste drop-off. Don't: Crush, puncture, or burn batteries.",
+    lifespan: '100-500 years',
     sampleImage: REAL_PHOTO_ASSETS.demo_battery
   },
   {
@@ -111,6 +123,8 @@ export const DEMO_CLASSIFICATIONS: DemoClassification[] = [
       'Empty liquid residues thoroughly.',
       'Dispose of according to local paper stream guidelines.'
     ],
+    dosAndDonts: "Do: Empty liquid fully. If plastic-lined, separate per local paper cup guidelines. Don't: Place dripping wet cups with clean dry paper.",
+    lifespan: '2-5 years',
     sampleImage: REAL_PHOTO_ASSETS.demo_paper_cup
   }
 ];

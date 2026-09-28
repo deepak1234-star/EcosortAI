@@ -36,6 +36,13 @@ export interface WasteScan {
   recommendedActions: string[];
   date: string;
   imageUrl?: string;
+  dos_and_donts?: {
+    dos: string[];
+    donts: string[];
+  };
+  dosAndDonts?: string;
+  lifespan?: string;
+  modelUsed?: string;
 }
 
 export interface CommunityActivity {
@@ -88,6 +95,8 @@ export interface DemoClassification {
   type: string;
   recommendedActions: string[];
   sampleImage?: string;
+  dosAndDonts?: string;
+  lifespan?: string;
 }
 
 export interface ToastMessage {
