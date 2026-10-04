@@ -282,61 +282,7 @@ export const Scanner: React.FC = () => {
           </p>
         </div>
 
-        {/* API Key Notification Banner if not yet configured */}
-        {!activeApiKey ? (
-          <div className="p-4 bg-amber-50/90 border-2 border-amber-300/80 rounded-2xl space-y-2 text-xs text-amber-950">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 font-extrabold text-amber-900 text-sm">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>Gemini API Key Required to Use Google Gemini Pro</span>
-              </div>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noreferrer"
-                className="text-amber-800 hover:text-amber-950 underline font-bold inline-flex items-center gap-1 text-[11px]"
-              >
-                Get Free Gemini API Key <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-            <p className="text-amber-900/90 leading-relaxed text-xs">
-              No Gemini API key is currently detected. Your scans will run using the <strong>Local TensorFlow Vision Model (MobileNet)</strong> to analyze image pixels on device. Paste your Google Gemini API key below to activate Google Gemini Pro cloud inference:
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2 pt-1">
-              <input
-                type="password"
-                value={apiKeyInput}
-                onChange={(e) => setApiKeyInput(e.target.value)}
-                placeholder="Paste your Gemini API key (AIzaSy...)"
-                className="flex-1 px-3 py-2 bg-white rounded-xl border border-amber-300 text-xs font-mono focus:ring-2 focus:ring-[#15803D] focus:outline-hidden"
-              />
-              <button
-                type="button"
-                onClick={() => handleSaveApiKey(apiKeyInput)}
-                disabled={!apiKeyInput.trim()}
-                className="px-4 py-2 bg-[#15803D] hover:bg-[#15803D]/90 disabled:opacity-50 text-white rounded-xl font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5"
-              >
-                <Check className="w-3.5 h-3.5" />
-                <span>Connect Gemini Pro</span>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#15803D] shrink-0" />
-              <span>
-                <strong>Gemini Cloud Connected:</strong> Active model is <code className="bg-emerald-100 text-emerald-900 px-1 py-0.5 rounded font-mono text-[11px] font-bold">{selectedModel}</code>. Live webcam &amp; uploaded frames are sent to Google Gemini API for structured classification.
-              </span>
-            </div>
-            <button
-              onClick={() => handleSaveApiKey('')}
-              className="text-xs text-slate-500 hover:text-rose-600 underline font-medium ml-2 shrink-0"
-            >
-              Disconnect
-            </button>
-          </div>
-        )}
+
       </div>
 
       {/* Main Scanner Grid */}
