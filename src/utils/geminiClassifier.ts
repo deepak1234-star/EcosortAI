@@ -127,22 +127,21 @@ export const classifyWithGeminiApi = async (
 ): Promise<GeminiClassificationResponse> => {
   const customKey = getClientGeminiApiKey();
 
-  // If a Gemini API key is available, run real cloud inference
-  if (customKey) {
-    // 1. Try Next.js / Vite API route (/api/classify)
-    try {
-      const response = await fetch('/api/classify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-gemini-api-key': customKey
-        },
-        body: JSON.stringify({
-          image: base64Image,
-          apiKey: customKey,
-          model: preferredModel
-        })
-      });
+  // 1. ALWAYS Try Next.js / Vite API route (/api/classify) first.
+  // The Vercel backend might have the GEMINI_API_KEY environment variable set securely!
+  try {
+    const response = await fetch('/api/classify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(customKey ? { 'x-gemini-api-key': customKey } : {})
+      },
+      body: JSON.stringify({
+        image: base64Image,
+        apiKey: customKey || undefined,
+        model: preferredModel
+      })
+    });
 
       if (response.ok) {
         const data = await response.json();
@@ -191,7 +190,6 @@ export const classifyWithGeminiApi = async (
     } catch (sdkErr: any) {
       console.warn('Direct Gemini SDK error:', sdkErr);
     }
-  }
 
   // 3. When NO Gemini API key is configured:
   // Dynamically analyze the real image pixels using TensorFlow MobileNet so the user gets
