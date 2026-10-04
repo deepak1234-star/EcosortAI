@@ -54,7 +54,7 @@ export const Scanner: React.FC = () => {
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [activeApiKey, setActiveApiKey] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-3.8-flash');
+  const [selectedModel, setSelectedModel] = useState<string>('gemini-1.5-flash');
 
   useEffect(() => {
     const key = getClientGeminiApiKey();
@@ -253,8 +253,7 @@ export const Scanner: React.FC = () => {
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className="bg-transparent border-0 focus:outline-hidden text-xs font-bold text-slate-800 cursor-pointer"
               >
-                <option value="gemini-3.8-flash">Google Gemini 3.8 Flash (Active Model)</option>
-                <option value="gemini-3-flash">Google Gemini 3 Flash</option>
+                <option value="gemini-1.5-flash">Google Gemini 1.5 Flash (Active Model)</option>
                 <option value="gemini-1.5-pro">Google Gemini Pro (1.5 Pro)</option>
               </select>
 

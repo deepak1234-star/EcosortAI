@@ -29,7 +29,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const customApiKey = req.headers['x-gemini-api-key'] || body.apiKey;
-    const model = body.model || 'gemini-3-flash';
+    const model = body.model || 'gemini-1.5-flash';
 
     const result = await classifyWasteImage({
       imageBase64: imagePayload,

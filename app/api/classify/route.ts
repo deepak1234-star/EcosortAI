@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     const customApiKey = request.headers.get('x-gemini-api-key') || body.apiKey;
-    const model = body.model || 'gemini-3-flash';
+    const model = body.model || 'gemini-1.5-flash';
 
     const result = await classifyWasteImage({
       imageBase64: imagePayload,

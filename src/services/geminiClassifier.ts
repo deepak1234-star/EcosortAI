@@ -74,13 +74,9 @@ export async function classifyWasteImage(options: ClassifyImageOptions): Promise
 
   const ai = new GoogleGenAI({ apiKey: resolvedApiKey });
 
-  // Priority list of models including gemini-3.8-flash, gemini-3-flash, and Gemini Pro
+  // Priority list of valid Gemini models
   const modelsToTry = [
-    model || 'gemini-3.8-flash',
-    'gemini-3.8-flash',
-    'gemini-3-flash',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
+    model || 'gemini-1.5-flash',
     'gemini-1.5-flash',
     'gemini-1.5-pro'
   ];
