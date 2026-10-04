@@ -108,7 +108,7 @@ Analyze the provided image and classify the primary waste item.
 Provide accurate, structured output matching this JSON schema:
 - "category": One of "Organic", "Paper", "Plastic", "Metal", "Glass", "E-Waste", "Hazardous".
 - "confidence": Percentage score between 0 and 100 representing visual detection certainty.
-- "item_name": Concise name of the specific item detected (e.g. "Crushed Plastic Water Bottle", "Cardboard Shipping Box", "Lithium-Ion Phone Battery", "Banana Peel").
+- "item_name": Concise name of the specific item detected, explicitly including the word "Waste" at the end (e.g. "Crushed Plastic Bottle Waste", "Cardboard Shipping Box Waste", "Lithium-Ion Battery Waste", "Banana Peel Waste").
 - "dos_and_donts": Object containing:
     - "dos": Array of 2-4 specific actionable disposal instructions (e.g. "Rinse food residues", "Flatten container to optimize volume", "Place in dry recyclables bin").
     - "donts": Array of 2-4 key mistakes to avoid (e.g. "Do not place in general wet garbage", "Do not recycle if contaminated with motor oil").
